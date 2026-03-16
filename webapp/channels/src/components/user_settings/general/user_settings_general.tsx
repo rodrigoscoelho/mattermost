@@ -770,6 +770,24 @@ export class UserSettingsGeneralTab extends PureComponent<Props, State> {
                         {helpText}
                     </div>,
                 );
+            } else if (this.props.user.auth_service === Constants.KEYCLOAK_OIDC_SERVICE) {
+                inputs.push(
+                    <div
+                        key='oauthEmailInfo'
+                        className='form-group'
+                    >
+                        <div className='setting-list__hint pb-3'>
+                            <FormattedMessage
+                                id='user.settings.general.emailKeycloakOIDCCantUpdate'
+                                defaultMessage='Login occurs through Fratar OIDC. Email cannot be updated. Email address used for notifications is {email}.'
+                                values={{
+                                    email: this.state.originalEmail,
+                                }}
+                            />
+                        </div>
+                        {helpText}
+                    </div>,
+                );
             } else if (this.props.user.auth_service === Constants.OFFICE365_SERVICE) {
                 inputs.push(
                     <div
@@ -884,11 +902,31 @@ export class UserSettingsGeneralTab extends PureComponent<Props, State> {
                     }}
                 />
             );
+        } else if (this.props.user.auth_service === Constants.KEYCLOAK_OIDC_SERVICE) {
+            describe = (
+                <FormattedMessage
+                    id='user.settings.general.loginKeycloakOIDC'
+                    defaultMessage='Login done through Fratar OIDC ({email})'
+                    values={{
+                        email: this.state.originalEmail,
+                    }}
+                />
+            );
         } else if (this.props.user.auth_service === Constants.OFFICE365_SERVICE) {
             describe = (
                 <FormattedMessage
                     id='user.settings.general.loginOffice365'
                     defaultMessage='Login done through Entra ID ({email})'
+                    values={{
+                        email: this.state.originalEmail,
+                    }}
+                />
+            );
+        } else if (this.props.user.auth_service === Constants.OPENID_SERVICE) {
+            describe = (
+                <FormattedMessage
+                    id='user.settings.general.loginOpenId'
+                    defaultMessage='Login done through OpenID Connect ({email})'
                     values={{
                         email: this.state.originalEmail,
                     }}

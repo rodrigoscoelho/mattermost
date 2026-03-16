@@ -31,6 +31,7 @@ import (
 const (
 	OAuthCookieMaxAgeSeconds = 30 * 60 // 30 minutes
 	CookieOAuth              = "MMOAUTH"
+	CookieOAuthNonce         = "MMOAUTHNONCE"
 	OpenIDScope              = "openid"
 )
 
@@ -729,13 +730,13 @@ func (a *App) getSSOProvider(service string) (einterfaces.OAuthProvider, *model.
 		return nil, model.NewAppError("getSSOProvider", "api.user.authorize_oauth_user.unsupported.app_error", nil, "service="+service, http.StatusNotImplemented)
 	}
 	providerType := service
-	if strings.Contains(*sso.Scope, OpenIDScope) {
+	if service != model.ServiceKeycloakOIDC && strings.Contains(*sso.Scope, OpenIDScope) {
 		providerType = model.ServiceOpenid
 	}
 	provider := einterfaces.GetOAuthProvider(providerType)
 	if provider == nil {
 		return nil, model.NewAppError("getSSOProvider", "api.user.login_by_oauth.not_available.app_error",
-			map[string]any{"Service": strings.Title(service)}, "", http.StatusNotImplemented)
+			map[string]any{"Service": model.AuthServiceDisplayName(service)}, "", http.StatusNotImplemented)
 	}
 	return provider, nil
 }
@@ -904,7 +905,7 @@ func (a *App) CompleteSwitchWithOAuth(rctx request.CTX, service string, userData
 	}
 
 	a.Srv().Go(func() {
-		if err := a.Srv().EmailService.SendSignInChangeEmail(user.Email, strings.Title(service)+" SSO", user.Locale, a.GetSiteURL()); err != nil {
+		if err := a.Srv().EmailService.SendSignInChangeEmail(user.Email, model.AuthServiceDisplayName(service)+" SSO", user.Locale, a.GetSiteURL()); err != nil {
 			rctx.Logger().Error("error sending signin change email", mlog.Err(err))
 		}
 	})
@@ -974,8 +975,18 @@ func (a *App) GetAuthorizationCode(rctx request.CTX, w http.ResponseWriter, r *h
 	http.SetCookie(w, oauthCookie)
 
 	clientId := *sso.Id
-	endpoint := *sso.AuthEndpoint
 	scope := *sso.Scope
+	endpoint := *sso.AuthEndpoint
+	var nonce string
+
+	if service == model.ServiceKeycloakOIDC {
+		metadata, err := a.getKeycloakOIDCProviderMetadata(sso)
+		if err != nil {
+			return "", model.NewAppError("GetAuthorizationCode", "api.user.get_authorization_code.endpoint.app_error", nil, "", http.StatusInternalServerError).Wrap(err)
+		}
+		endpoint = metadata.AuthorizationEndpoint
+		nonce = model.NewId()
+	}
 
 	tokenExtra := generateOAuthStateTokenExtra(props["email"], props["action"], cookieValue)
 	stateToken, err := a.CreateOAuthStateToken(tokenExtra)
@@ -994,6 +1005,11 @@ func (a *App) GetAuthorizationCode(rctx request.CTX, w http.ResponseWriter, r *h
 	redirectURI := siteURL + "/signup/" + service + "/complete"
 
 	authURL := endpoint + "?response_type=code&client_id=" + clientId + "&redirect_uri=" + url.QueryEscape(redirectURI) + "&state=" + url.QueryEscape(state)
+
+	if nonce != "" {
+		a.setOAuthNonceCookie(w, r, nonce)
+		authURL += "&nonce=" + utils.URLEncode(nonce)
+	}
 
 	if scope != "" {
 		authURL += "&scope=" + utils.URLEncode(scope)
@@ -1067,6 +1083,15 @@ func (a *App) AuthorizeOAuthUser(rctx request.CTX, w http.ResponseWriter, r *htt
 	}
 
 	http.SetCookie(w, httpCookie)
+
+	if service == model.ServiceKeycloakOIDC {
+		body, tokenUser, appErr := a.authorizeKeycloakOIDCUser(rctx, w, r, provider, sso, code, redirectURI)
+		if appErr != nil {
+			return nil, stateProps, nil, appErr
+		}
+
+		return body, stateProps, tokenUser, nil
+	}
 
 	p := url.Values{}
 	p.Set("client_id", *sso.Id)

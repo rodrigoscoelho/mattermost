@@ -360,8 +360,11 @@ func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *m
 	props["EnableSignUpWithGoogle"] = "false"
 	props["EnableSignUpWithOffice365"] = "false"
 	props["EnableSignUpWithOpenId"] = "false"
+	props["EnableSignUpWithKeycloakOIDC"] = "false"
 	props["OpenIdButtonText"] = ""
 	props["OpenIdButtonColor"] = ""
+	props["KeycloakOIDCButtonText"] = ""
+	props["KeycloakOIDCButtonColor"] = ""
 	props["CWSURL"] = ""
 	props["EnableCustomBrand"] = strconv.FormatBool(*c.TeamSettings.EnableCustomBrand)
 	props["CustomBrandText"] = *c.TeamSettings.CustomBrandText
@@ -372,6 +375,9 @@ func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *m
 	props["HideGuestTags"] = strconv.FormatBool(*c.GuestAccountsSettings.HideTags)
 	props["GuestAccountsEnforceMultifactorAuthentication"] = strconv.FormatBool(*c.GuestAccountsSettings.EnforceMultifactorAuthentication)
 	props["EnableGuestMagicLink"] = strconv.FormatBool(*c.GuestAccountsSettings.EnableGuestMagicLink)
+	props["EnableSignUpWithKeycloakOIDC"] = strconv.FormatBool(*c.KeycloakOIDCSettings.Enable)
+	props["KeycloakOIDCButtonText"] = *c.KeycloakOIDCSettings.ButtonText
+	props["KeycloakOIDCButtonColor"] = *c.KeycloakOIDCSettings.ButtonColor
 
 	if license != nil {
 		if *license.Features.LDAP {

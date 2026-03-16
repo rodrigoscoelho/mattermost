@@ -84,6 +84,7 @@ const Signup = ({onCustomizeHeader}: SignupProps) => {
         EnableSignUpWithEmail,
         EnableSignUpWithGitLab,
         EnableSignUpWithGoogle,
+        EnableSignUpWithKeycloakOIDC,
         EnableSignUpWithOffice365,
         EnableSignUpWithOpenId,
         EnableLdap,
@@ -94,6 +95,8 @@ const Signup = ({onCustomizeHeader}: SignupProps) => {
         CustomDescriptionText,
         GitLabButtonText,
         GitLabButtonColor,
+        KeycloakOIDCButtonText,
+        KeycloakOIDCButtonColor,
         OpenIdButtonText,
         OpenIdButtonColor,
         EnableCustomBrand,
@@ -117,6 +120,7 @@ const Signup = ({onCustomizeHeader}: SignupProps) => {
     const enableSignUpWithEmail = enableUserCreation && EnableSignUpWithEmail === 'true';
     const enableSignUpWithGitLab = enableUserCreation && EnableSignUpWithGitLab === 'true';
     const enableSignUpWithGoogle = enableUserCreation && EnableSignUpWithGoogle === 'true';
+    const enableSignUpWithKeycloakOIDC = enableUserCreation && EnableSignUpWithKeycloakOIDC === 'true';
     const enableSignUpWithOffice365 = enableUserCreation && EnableSignUpWithOffice365 === 'true';
     const enableSignUpWithOpenId = enableUserCreation && EnableSignUpWithOpenId === 'true';
     const enableLDAP = EnableLdap === 'true';
@@ -141,7 +145,7 @@ const Signup = ({onCustomizeHeader}: SignupProps) => {
     const [acceptedTerms, setAcceptedTerms] = useState(false);
     const [submitClicked, setSubmitClicked] = useState(false);
 
-    const enableExternalSignup = enableSignUpWithGitLab || enableSignUpWithOffice365 || enableSignUpWithGoogle || enableSignUpWithOpenId || enableLDAP || enableSAML;
+    const enableExternalSignup = enableSignUpWithGitLab || enableSignUpWithGoogle || enableSignUpWithKeycloakOIDC || enableSignUpWithOffice365 || enableSignUpWithOpenId || enableLDAP || enableSAML;
     const hasError = Boolean(emailError || nameError || passwordError || serverError || alertBanner);
     const canSubmit = Boolean(email && name && password && acceptedTerms) && !hasError && !loading;
     const passwordConfig = useSelector(getPasswordConfig);
@@ -186,6 +190,18 @@ const Signup = ({onCustomizeHeader}: SignupProps) => {
                 url,
                 icon: <EntraIdIcon/>,
                 label: formatMessage({id: 'login.office365', defaultMessage: 'Entra ID'}),
+                onClick: desktopExternalAuth(url),
+            });
+        }
+
+        if (enableSignUpWithKeycloakOIDC) {
+            const url = `${Client4.getOAuthRoute()}/keycloak_oidc/signup${search}`;
+            externalLoginOptions.push({
+                id: 'keycloak_oidc',
+                url,
+                icon: <LoginOpenIDIcon/>,
+                label: KeycloakOIDCButtonText || formatMessage({id: 'login.keycloak_oidc', defaultMessage: 'Fratar OIDC'}),
+                style: {color: KeycloakOIDCButtonColor, borderColor: KeycloakOIDCButtonColor},
                 onClick: desktopExternalAuth(url),
             });
         }

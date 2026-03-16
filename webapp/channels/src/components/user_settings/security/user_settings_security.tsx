@@ -61,6 +61,7 @@ type Props = {
     allowedToSwitchToEmail: boolean;
     enableSignUpWithGitLab: boolean;
     enableSignUpWithGoogle: boolean;
+    enableSignUpWithKeycloakOIDC: boolean;
     enableSignUpWithOpenId: boolean;
     enableLdap: boolean;
     enableSaml: boolean;
@@ -389,6 +390,10 @@ export class SecurityTab extends React.PureComponent<Props, State> {
                         id: 'user.settings.security.passwordGoogleCantUpdate',
                         defaultMessage: 'Login occurs through Google Apps. Password cannot be updated.',
                     }),
+                    [Constants.KEYCLOAK_OIDC_SERVICE]: this.props.intl.formatMessage({
+                        id: 'user.settings.security.passwordKeycloakOIDCCantUpdate',
+                        defaultMessage: 'Login occurs through Fratar OIDC. Password cannot be updated.',
+                    }),
                     [Constants.OFFICE365_SERVICE]: this.props.intl.formatMessage({
                         id: 'user.settings.security.passwordOffice365CantUpdate',
                         defaultMessage: 'Login occurs through Entra ID. Password cannot be updated.',
@@ -489,6 +494,13 @@ export class SecurityTab extends React.PureComponent<Props, State> {
                     defaultMessage='Login done through Google Apps'
                 />
             );
+        } else if (this.props.user.auth_service === Constants.KEYCLOAK_OIDC_SERVICE) {
+            describe = (
+                <FormattedMessage
+                    id='user.settings.security.loginKeycloakOIDC'
+                    defaultMessage='Login done through Fratar OIDC'
+                />
+            );
         } else if (
             this.props.user.auth_service === Constants.OFFICE365_SERVICE
         ) {
@@ -534,6 +546,7 @@ export class SecurityTab extends React.PureComponent<Props, State> {
             let emailOption;
             let gitlabOption;
             let googleOption;
+            let keycloakOIDCOption;
             let office365Option;
             let openidOption;
             let ldapOption;
@@ -581,6 +594,30 @@ export class SecurityTab extends React.PureComponent<Props, State> {
                                 <FormattedMessage
                                     id='user.settings.security.switchGoogle'
                                     defaultMessage='Switch to Using Google SSO'
+                                />
+                            </Link>
+                            <br/>
+                        </div>
+                    );
+                }
+
+                if (this.props.enableSignUpWithKeycloakOIDC) {
+                    keycloakOIDCOption = (
+                        <div className='pb-3'>
+                            <Link
+                                className='btn btn-primary'
+                                to={
+                                    '/claim/email_to_oauth?email=' +
+                                    encodeURIComponent(user.email) +
+                                    '&old_type=' +
+                                    user.auth_service +
+                                    '&new_type=' +
+                                    Constants.KEYCLOAK_OIDC_SERVICE
+                                }
+                            >
+                                <FormattedMessage
+                                    id='user.settings.security.switchKeycloakOIDC'
+                                    defaultMessage='Switch to Using Fratar OIDC'
                                 />
                             </Link>
                             <br/>
@@ -715,6 +752,7 @@ export class SecurityTab extends React.PureComponent<Props, State> {
                     {emailOption}
                     {gitlabOption}
                     {googleOption}
+                    {keycloakOIDCOption}
                     {office365Option}
                     {openidOption}
                     {ldapOption}
@@ -782,6 +820,15 @@ export class SecurityTab extends React.PureComponent<Props, State> {
                 <FormattedMessage
                     id='user.settings.security.google'
                     defaultMessage='Google'
+                />
+            );
+        } else if (
+            this.props.user.auth_service === Constants.KEYCLOAK_OIDC_SERVICE
+        ) {
+            describe = (
+                <FormattedMessage
+                    id='user.settings.security.keycloak_oidc'
+                    defaultMessage='Fratar OIDC'
                 />
             );
         } else if (
@@ -992,6 +1039,7 @@ export class SecurityTab extends React.PureComponent<Props, State> {
         let numMethods = 0;
         numMethods = this.props.enableSignUpWithGitLab ? numMethods + 1 : numMethods;
         numMethods = this.props.enableSignUpWithGoogle ? numMethods + 1 : numMethods;
+        numMethods = this.props.enableSignUpWithKeycloakOIDC ? numMethods + 1 : numMethods;
         numMethods = this.props.enableSignUpWithOffice365 ? numMethods + 1 : numMethods;
         numMethods = this.props.enableSignUpWithOpenId ? numMethods + 1 : numMethods;
         numMethods = this.props.enableLdap ? numMethods + 1 : numMethods;

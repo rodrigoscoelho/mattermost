@@ -374,6 +374,7 @@ var validAuthServices = []string{
 	model.ServiceGoogle,
 	model.ServiceOffice365,
 	model.ServiceOpenid,
+	model.ServiceKeycloakOIDC,
 }
 
 func validateAuthService(authService *string) *model.AppError {

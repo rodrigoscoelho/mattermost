@@ -35,6 +35,7 @@ go.work.sum
 .npminstall
 .yarninstall
 /prepackaged_plugins
+/mattermost
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o

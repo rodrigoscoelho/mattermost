@@ -312,7 +312,7 @@ func completeOAuth(c *Context, w http.ResponseWriter, r *http.Request) {
 	if oauthError == "access_denied" {
 		utils.RenderWebError(c.App.Config(), w, r, http.StatusTemporaryRedirect, url.Values{
 			"type":    []string{"oauth_access_denied"},
-			"service": []string{strings.Title(service)},
+			"service": []string{model.AuthServiceDisplayName(service)},
 		}, c.App.AsymmetricSigningKey())
 		return
 	}
@@ -321,7 +321,7 @@ func completeOAuth(c *Context, w http.ResponseWriter, r *http.Request) {
 	if code == "" {
 		utils.RenderWebError(c.App.Config(), w, r, http.StatusTemporaryRedirect, url.Values{
 			"type":    []string{"oauth_missing_code"},
-			"service": []string{strings.Title(service)},
+			"service": []string{model.AuthServiceDisplayName(service)},
 		}, c.App.AsymmetricSigningKey())
 		return
 	}

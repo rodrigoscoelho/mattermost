@@ -2008,10 +2008,11 @@ func login(c *Context, w http.ResponseWriter, r *http.Request) {
 		samlEnabled := *config.SamlSettings.Enable
 		gitlabEnabled := *config.GitLabSettings.Enable
 		openidEnabled := *config.OpenIdSettings.Enable
+		keycloakOIDCEnabled := *config.KeycloakOIDCSettings.Enable
 		googleEnabled := *config.GoogleSettings.Enable
 		office365Enabled := *config.Office365Settings.Enable
 
-		if samlEnabled || gitlabEnabled || googleEnabled || office365Enabled || openidEnabled {
+		if samlEnabled || gitlabEnabled || googleEnabled || office365Enabled || openidEnabled || keycloakOIDCEnabled {
 			c.Err = model.NewAppError("login", "api.user.login.invalid_credentials_sso", nil, "", http.StatusUnauthorized)
 			return
 		}

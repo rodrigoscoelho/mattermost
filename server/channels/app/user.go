@@ -428,10 +428,6 @@ func (a *App) createUserOrGuest(rctx request.CTX, user *model.User, guest bool) 
 }
 
 func (a *App) CreateOAuthUser(rctx request.CTX, service string, userData io.Reader, inviteToken string, inviteId string, tokenUser *model.User) (*model.User, *model.AppError) {
-	if !*a.Config().TeamSettings.EnableUserCreation {
-		return nil, model.NewAppError("CreateOAuthUser", "api.user.create_user.disabled.app_error", nil, "", http.StatusNotImplemented)
-	}
-
 	provider, e := a.getSSOProvider(service)
 	if e != nil {
 		return nil, e
@@ -450,22 +446,32 @@ func (a *App) CreateOAuthUser(rctx request.CTX, service string, userData io.Read
 		user.AuthService = service
 	}
 
-	found := true
-	count := 0
-	for found {
-		if found = a.ch.srv.userService.IsUsernameTaken(user.Username); found {
-			user.Username = user.Username + strconv.Itoa(count)
-			count++
-		}
-	}
-
 	userByAuth, _ := a.ch.srv.userService.GetUserByAuth(user.AuthData, service)
 	if userByAuth != nil {
 		return userByAuth, nil
 	}
 
-	userByEmail, _ := a.ch.srv.userService.GetUserByEmail(user.Email)
+	var userByEmail *model.User
+	if user.Email != "" {
+		userByEmail, _ = a.ch.srv.userService.GetUserByEmail(user.Email)
+	}
 	if userByEmail != nil {
+		if service == model.ServiceKeycloakOIDC {
+			if _, err = a.Srv().Store().User().UpdateAuthData(userByEmail.Id, user.AuthService, user.AuthData, "", false); err != nil {
+				var invErr *store.ErrInvalidInput
+				switch {
+				case errors.As(err, &invErr):
+					return nil, model.NewAppError("CreateOAuthUser", "app.user.update_auth_data.email_exists.app_error", nil, "", http.StatusBadRequest).Wrap(err)
+				default:
+					return nil, model.NewAppError("CreateOAuthUser", "app.user.update_auth_data.app_error", nil, "", http.StatusInternalServerError).Wrap(err)
+				}
+			}
+
+			userByEmail.AuthService = user.AuthService
+			userByEmail.AuthData = user.AuthData
+			return userByEmail, nil
+		}
+
 		if userByEmail.AuthService == "" {
 			return nil, model.NewAppError("CreateOAuthUser", "api.user.create_oauth_user.already_attached.app_error", map[string]any{"Service": service, "Auth": model.UserAuthServiceEmail}, "email="+user.Email, http.StatusBadRequest)
 		}
@@ -477,6 +483,19 @@ func (a *App) CreateOAuthUser(rctx request.CTX, service string, userData io.Read
 			return userByEmail, nil
 		}
 		return nil, model.NewAppError("CreateOAuthUser", "api.user.create_oauth_user.already_attached.app_error", map[string]any{"Service": service, "Auth": userByEmail.AuthService}, "email="+user.Email+" authData="+*user.AuthData, http.StatusBadRequest)
+	}
+
+	if !*a.Config().TeamSettings.EnableUserCreation {
+		return nil, model.NewAppError("CreateOAuthUser", "api.user.create_user.disabled.app_error", nil, "", http.StatusNotImplemented)
+	}
+
+	found := true
+	count := 0
+	for found {
+		if found = a.ch.srv.userService.IsUsernameTaken(user.Username); found {
+			user.Username = user.Username + strconv.Itoa(count)
+			count++
+		}
 	}
 
 	user.EmailVerified = true
@@ -2461,7 +2480,7 @@ func (a *App) UpdateOAuthUserAttrs(rctx request.CTX, userData io.Reader, user *m
 
 	userAttrsChanged := false
 
-	if oauthUser.Username != user.Username {
+	if service != model.ServiceKeycloakOIDC && oauthUser.Username != user.Username {
 		if existingUser, _ := a.GetUserByUsername(oauthUser.Username); existingUser == nil {
 			user.Username = oauthUser.Username
 			userAttrsChanged = true

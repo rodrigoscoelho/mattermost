@@ -3974,6 +3974,7 @@ type Config struct {
 	GoogleSettings              SSOSettings
 	Office365Settings           Office365Settings
 	OpenIdSettings              SSOSettings
+	KeycloakOIDCSettings        SSOSettings
 	LdapSettings                LdapSettings
 	ComplianceSettings          ComplianceSettings
 	LocalizationSettings        LocalizationSettings
@@ -4044,6 +4045,8 @@ func (o *Config) GetSSOService(service string) *SSOSettings {
 		return o.Office365Settings.SSOSettings()
 	case ServiceOpenid:
 		return &o.OpenIdSettings
+	case ServiceKeycloakOIDC:
+		return &o.KeycloakOIDCSettings
 	}
 
 	return nil
@@ -4083,6 +4086,7 @@ func (o *Config) SetDefaults() {
 	o.GitLabSettings.setDefaults("", "", "", "", "")
 	o.GoogleSettings.setDefaults(GoogleSettingsDefaultScope, GoogleSettingsDefaultAuthEndpoint, GoogleSettingsDefaultTokenEndpoint, GoogleSettingsDefaultUserAPIEndpoint, "")
 	o.OpenIdSettings.setDefaults(OpenidSettingsDefaultScope, "", "", "", "#145DBF")
+	o.KeycloakOIDCSettings.setDefaults(OpenidSettingsDefaultScope, "", "", "", "")
 	o.ServiceSettings.SetDefaults(isUpdate)
 	o.PasswordSettings.SetDefaults()
 	o.TeamSettings.SetDefaults()
@@ -5046,6 +5050,10 @@ func (o *Config) Sanitize(pluginManifests []*Manifest, opts *SanitizeOptions) {
 
 	if o.OpenIdSettings.Secret != nil && *o.OpenIdSettings.Secret != "" {
 		*o.OpenIdSettings.Secret = FakeSetting
+	}
+
+	if o.KeycloakOIDCSettings.Secret != nil && *o.KeycloakOIDCSettings.Secret != "" {
+		*o.KeycloakOIDCSettings.Secret = FakeSetting
 	}
 
 	if o.SqlSettings.DataSource != nil {

@@ -54,6 +54,10 @@ func desanitize(actual, target *model.Config) {
 		target.OpenIdSettings.Secret = actual.OpenIdSettings.Secret
 	}
 
+	if target.KeycloakOIDCSettings.Secret != nil && *target.KeycloakOIDCSettings.Secret == model.FakeSetting {
+		target.KeycloakOIDCSettings.Secret = actual.KeycloakOIDCSettings.Secret
+	}
+
 	if *target.SqlSettings.DataSource == model.FakeSetting {
 		*target.SqlSettings.DataSource = *actual.SqlSettings.DataSource
 	}

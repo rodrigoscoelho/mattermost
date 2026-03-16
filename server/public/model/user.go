@@ -905,7 +905,8 @@ func (u *User) IsOAuthUser() bool {
 	return u.AuthService == ServiceGitlab ||
 		u.AuthService == ServiceGoogle ||
 		u.AuthService == ServiceOffice365 ||
-		u.AuthService == ServiceOpenid
+		u.AuthService == ServiceOpenid ||
+		u.AuthService == ServiceKeycloakOIDC
 }
 
 func (u *User) IsLDAPUser() bool {

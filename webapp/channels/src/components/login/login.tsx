@@ -87,12 +87,15 @@ const Login = ({onCustomizeHeader}: LoginProps) => {
         EnableSignUpWithGitLab,
         EnableSignUpWithOffice365,
         EnableSignUpWithGoogle,
+        EnableSignUpWithKeycloakOIDC,
         EnableSignUpWithOpenId,
         EnableOpenServer,
         EnableUserCreation,
         LdapLoginFieldName,
         GitLabButtonText,
         GitLabButtonColor,
+        KeycloakOIDCButtonText,
+        KeycloakOIDCButtonColor,
         OpenIdButtonText,
         OpenIdButtonColor,
         SamlLoginButtonText,
@@ -138,6 +141,7 @@ const Login = ({onCustomizeHeader}: LoginProps) => {
     const enableSignUpWithEmail = enableUserCreation && EnableSignUpWithEmail === 'true';
     const enableSignUpWithGitLab = EnableSignUpWithGitLab === 'true';
     const enableSignUpWithGoogle = EnableSignUpWithGoogle === 'true';
+    const enableSignUpWithKeycloakOIDC = EnableSignUpWithKeycloakOIDC === 'true';
     const enableSignUpWithOffice365 = EnableSignUpWithOffice365 === 'true';
     const enableSignUpWithOpenId = EnableSignUpWithOpenId === 'true';
     const isLicensed = IsLicensed === 'true';
@@ -146,9 +150,9 @@ const Login = ({onCustomizeHeader}: LoginProps) => {
     const siteName = SiteName ?? '';
 
     const enableBaseLogin = enableSignInWithEmail || enableSignInWithUsername || ldapEnabled;
-    const enableExternalSignup = enableSignUpWithGitLab || enableSignUpWithOffice365 || enableSignUpWithGoogle || enableSignUpWithOpenId || enableSignUpWithSaml;
+    const enableExternalSignup = enableSignUpWithGitLab || enableSignUpWithGoogle || enableSignUpWithKeycloakOIDC || enableSignUpWithOffice365 || enableSignUpWithOpenId || enableSignUpWithSaml;
     const showSignup = enableOpenServer && (enableExternalSignup || enableSignUpWithEmail || enableLdap);
-    const onlyLdapEnabled = enableLdap && !(enableSaml || enableSignInWithEmail || enableSignInWithUsername || enableSignUpWithEmail || enableSignUpWithGitLab || enableSignUpWithGoogle || enableSignUpWithOffice365 || enableSignUpWithOpenId);
+    const onlyLdapEnabled = enableLdap && !(enableSaml || enableSignInWithEmail || enableSignInWithUsername || enableSignUpWithEmail || enableSignUpWithGitLab || enableSignUpWithGoogle || enableSignUpWithKeycloakOIDC || enableSignUpWithOffice365 || enableSignUpWithOpenId);
 
     const [desktopLoginLink, setDesktopLoginLink] = useState('');
 
@@ -179,6 +183,18 @@ const Login = ({onCustomizeHeader}: LoginProps) => {
                 icon: <LoginGoogleIcon/>,
                 label: formatMessage({id: 'login.google', defaultMessage: 'Google'}),
                 onClick: handleExternalAuth(url, 'google'),
+            });
+        }
+
+        if (enableSignUpWithKeycloakOIDC) {
+            const url = `${Client4.getOAuthRoute()}/keycloak_oidc/login${search}`;
+            externalLoginOptions.push({
+                id: 'keycloak_oidc',
+                url,
+                icon: <LoginOpenIDIcon/>,
+                label: KeycloakOIDCButtonText || formatMessage({id: 'login.keycloak_oidc', defaultMessage: 'Fratar OIDC'}),
+                style: {color: KeycloakOIDCButtonColor, borderColor: KeycloakOIDCButtonColor},
+                onClick: handleExternalAuth(url, 'keycloak_oidc'),
             });
         }
 

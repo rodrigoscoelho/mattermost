@@ -49,6 +49,7 @@ var configSensitivePaths = map[string]bool{
 	"GoogleSettings.Secret":                                  true,
 	"Office365Settings.Secret":                               true,
 	"OpenIdSettings.Secret":                                  true,
+	"KeycloakOIDCSettings.Secret":                            true,
 	"ElasticsearchSettings.Password":                         true,
 	"MessageExportSettings.GlobalRelaySettings.SMTPUsername": true,
 	"MessageExportSettings.GlobalRelaySettings.SMTPPassword": true,
