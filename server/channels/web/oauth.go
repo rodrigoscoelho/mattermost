@@ -39,18 +39,18 @@ func (w *Web) InitOAuth() {
 	w.MainRouter.Handle(model.OAuthAccessTokenEndpoint, w.APIHandlerTrustRequester(getAccessToken)).Methods(http.MethodPost)
 
 	// API version independent OAuth as a client endpoints
-	w.MainRouter.Handle("/oauth/{service:[A-Za-z0-9]+}/complete", w.APIHandler(completeOAuth)).Methods(http.MethodGet)
-	w.MainRouter.Handle("/oauth/{service:[A-Za-z0-9]+}/login", w.APIHandler(loginWithOAuth)).Methods(http.MethodGet)
-	w.MainRouter.Handle("/oauth/{service:[A-Za-z0-9]+}/mobile_login", w.APIHandler(mobileLoginWithOAuth)).Methods(http.MethodGet)
-	w.MainRouter.Handle("/oauth/{service:[A-Za-z0-9]+}/signup", w.APIHandler(signupWithOAuth)).Methods(http.MethodGet)
+	w.MainRouter.Handle("/oauth/{service:[A-Za-z0-9_]+}/complete", w.APIHandler(completeOAuth)).Methods(http.MethodGet)
+	w.MainRouter.Handle("/oauth/{service:[A-Za-z0-9_]+}/login", w.APIHandler(loginWithOAuth)).Methods(http.MethodGet)
+	w.MainRouter.Handle("/oauth/{service:[A-Za-z0-9_]+}/mobile_login", w.APIHandler(mobileLoginWithOAuth)).Methods(http.MethodGet)
+	w.MainRouter.Handle("/oauth/{service:[A-Za-z0-9_]+}/signup", w.APIHandler(signupWithOAuth)).Methods(http.MethodGet)
 
 	// Intune MAM authentication endpoint
 	w.MainRouter.Handle("/oauth/intune", w.APIHandler(loginByIntune)).Methods(http.MethodPost)
 
 	// Old endpoints for backwards compatibility, needed to not break SSO for any old setups
-	w.MainRouter.Handle("/api/v3/oauth/{service:[A-Za-z0-9]+}/complete", w.APIHandler(completeOAuth)).Methods(http.MethodGet)
-	w.MainRouter.Handle("/signup/{service:[A-Za-z0-9]+}/complete", w.APIHandler(completeOAuth)).Methods(http.MethodGet)
-	w.MainRouter.Handle("/login/{service:[A-Za-z0-9]+}/complete", w.APIHandler(completeOAuth)).Methods(http.MethodGet)
+	w.MainRouter.Handle("/api/v3/oauth/{service:[A-Za-z0-9_]+}/complete", w.APIHandler(completeOAuth)).Methods(http.MethodGet)
+	w.MainRouter.Handle("/signup/{service:[A-Za-z0-9_]+}/complete", w.APIHandler(completeOAuth)).Methods(http.MethodGet)
+	w.MainRouter.Handle("/login/{service:[A-Za-z0-9_]+}/complete", w.APIHandler(completeOAuth)).Methods(http.MethodGet)
 	w.MainRouter.Handle("/api/v4/oauth_test", w.APISessionRequired(testHandler)).Methods(http.MethodGet)
 }
 

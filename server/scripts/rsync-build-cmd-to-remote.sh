@@ -11,6 +11,7 @@ REMOTE_DIR="${REMOTE_DIR:-/opt/mattermost.new}"
 RSYNC_RSH="${RSYNC_RSH:-ssh}"
 STAGE_DIR="$(mktemp -d)"
 DRY_RUN=false
+MATTERMOST_BINARY_SOURCE=""
 
 usage() {
     cat <<EOF
@@ -24,7 +25,7 @@ Variaveis opcionais:
   RSYNC_RSH="ssh -i /caminho/da/chave"
 
 Este script sincroniza apenas o que sai do build:
-  - bin/mattermost
+  - mattermost (de go build ./cmd/mattermost) ou bin/mattermost (de make build-cmd)
   - bin/mmctl (se existir)
   - client/ (webapp/channels/dist)
   - fonts/
@@ -62,6 +63,19 @@ require_path() {
     fi
 }
 
+resolve_mattermost_binary() {
+    local root_binary="${SERVER_DIR}/mattermost"
+    local build_cmd_binary="${SERVER_DIR}/bin/mattermost"
+
+    if [[ -e "${root_binary}" && ( ! -e "${build_cmd_binary}" || "${root_binary}" -nt "${build_cmd_binary}" ) ]]; then
+        MATTERMOST_BINARY_SOURCE="${root_binary}"
+        return
+    fi
+
+    require_path "${build_cmd_binary}"
+    MATTERMOST_BINARY_SOURCE="${build_cmd_binary}"
+}
+
 stage_dir() {
     local src="$1"
     local name="$2"
@@ -82,7 +96,7 @@ cleanup() {
     rm -rf "${STAGE_DIR}"
 }
 
-require_path "${SERVER_DIR}/bin/mattermost"
+resolve_mattermost_binary
 require_path "${WEBAPP_DIST_DIR}"
 require_path "${SERVER_DIR}/fonts"
 require_path "${SERVER_DIR}/i18n"
@@ -91,6 +105,7 @@ require_path "${REPO_DIR}/NOTICE.txt"
 require_path "${REPO_DIR}/README.md"
 
 echo "sincronizando build local para ${REMOTE}:${REMOTE_DIR}"
+echo "binario selecionado: ${MATTERMOST_BINARY_SOURCE}"
 if [[ "${DRY_RUN}" == "true" ]]; then
     echo "modo dry-run ativo"
 fi
@@ -98,7 +113,7 @@ fi
 trap cleanup EXIT
 
 mkdir -p "${STAGE_DIR}/bin"
-cp -a "${SERVER_DIR}/bin/mattermost" "${STAGE_DIR}/bin/"
+cp -a "${MATTERMOST_BINARY_SOURCE}" "${STAGE_DIR}/bin/mattermost"
 if [[ -e "${SERVER_DIR}/bin/mmctl" ]]; then
     cp -a "${SERVER_DIR}/bin/mmctl" "${STAGE_DIR}/bin/"
 fi
