@@ -17,3 +17,11 @@ func AuthServiceDisplayName(service string) string {
 
 	return strings.Title(service)
 }
+
+func ShouldAliasOpenIdToKeycloakOIDC(config *Config) bool {
+	if config == nil {
+		return false
+	}
+
+	return SafeDereference(config.KeycloakOIDCSettings.Enable) && !SafeDereference(config.OpenIdSettings.Enable)
+}

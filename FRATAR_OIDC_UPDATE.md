@@ -210,6 +210,38 @@ Checklist:
 - confirmar retorno para o Mattermost
 - confirmar bind por email em usuario existente
 
+### 7.3. Validacao funcional mobile
+
+O app mobile oficial do Mattermost so exibe provedores SSO conhecidos. Para manter o backend usando
+`keycloak_oidc` e ainda fazer o app mostrar a opcao, este fork publica o Fratar OIDC como alias
+`openid` no client config quando `KeycloakOIDCSettings.Enable=true` e `OpenIdSettings.Enable=false`.
+
+Validar o client config:
+
+```bash
+curl -s https://chat.fratar.com.br/api/v4/config/client | jq '.EnableSignUpWithOpenId, .EnableSignUpWithKeycloakOIDC, .OpenIdButtonText, .KeycloakOIDCButtonText'
+```
+
+Resultado esperado:
+
+```text
+"true"
+"false"
+"Fratar OIDC"
+"Fratar OIDC"
+```
+
+Validar a rota que o app mobile oficial chama:
+
+```bash
+curl -sS -D - -o /dev/null 'https://chat.fratar.com.br/oauth/openid/mobile_login?redirect_to=mmauth://callback'
+```
+
+Resultado esperado:
+- `302 Found`
+- `Location:` apontando para o Keycloak
+- `redirect_uri=` apontando para `https://chat.fratar.com.br/signup/keycloak_oidc/complete`
+
 ## 8. Verificacao do binario ativo
 
 Se o frontend mostrar o botao, mas `/oauth/keycloak_oidc/login` continuar voltando para `/login?redirect_to=...`, quase sempre o problema e deploy do binario errado ou servico apontando para outra instalacao.
@@ -257,6 +289,11 @@ https://chat.fratar.com.br/signup/keycloak_oidc/complete
 ```
 
 deve estar cadastrado como redirect URI valido.
+
+Observacao para mobile:
+- nao e necessario cadastrar `https://chat.fratar.com.br/signup/openid/complete` enquanto o alias estiver ativo
+- o app chama `/oauth/openid/mobile_login`, mas o Mattermost redireciona o Keycloak para `/signup/keycloak_oidc/complete`
+- os usuarios continuam autenticando com `auth_service = keycloak_oidc`
 
 ## 10. Fluxo rapido do dia a dia
 

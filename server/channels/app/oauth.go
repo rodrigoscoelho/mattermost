@@ -564,6 +564,8 @@ func (a *App) newSessionUpdateToken(rctx request.CTX, app *model.OAuthApp, acces
 }
 
 func (a *App) GetOAuthLoginEndpoint(rctx request.CTX, w http.ResponseWriter, r *http.Request, service, action, redirectTo, loginHint string, isMobile bool, desktopToken string, inviteToken string, inviteId string) (string, *model.AppError) {
+	service = a.resolveOAuthServiceAlias(service)
+
 	stateProps := map[string]string{}
 	stateProps["action"] = action
 
@@ -592,6 +594,8 @@ func (a *App) GetOAuthLoginEndpoint(rctx request.CTX, w http.ResponseWriter, r *
 }
 
 func (a *App) GetOAuthSignupEndpoint(rctx request.CTX, w http.ResponseWriter, r *http.Request, service, desktopToken string, inviteToken string, inviteId string) (string, *model.AppError) {
+	service = a.resolveOAuthServiceAlias(service)
+
 	stateProps := map[string]string{}
 	stateProps["action"] = model.OAuthActionSignup
 
@@ -611,6 +615,14 @@ func (a *App) GetOAuthSignupEndpoint(rctx request.CTX, w http.ResponseWriter, r 
 	}
 
 	return authURL, nil
+}
+
+func (a *App) resolveOAuthServiceAlias(service string) string {
+	if service == model.ServiceOpenid && model.ShouldAliasOpenIdToKeycloakOIDC(a.Config()) {
+		return model.ServiceKeycloakOIDC
+	}
+
+	return service
 }
 
 func (a *App) GetAuthorizedAppsForUser(userID string, page, perPage int) ([]*model.OAuthApp, *model.AppError) {

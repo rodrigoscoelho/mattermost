@@ -452,6 +452,13 @@ func GenerateLimitedClientConfig(c *model.Config, telemetryID string, license *m
 		}
 	}
 
+	if model.ShouldAliasOpenIdToKeycloakOIDC(c) {
+		props["EnableSignUpWithOpenId"] = "true"
+		props["OpenIdButtonText"] = model.SafeDereference(c.KeycloakOIDCSettings.ButtonText)
+		props["OpenIdButtonColor"] = model.SafeDereference(c.KeycloakOIDCSettings.ButtonColor)
+		props["EnableSignUpWithKeycloakOIDC"] = "false"
+	}
+
 	for key, value := range c.FeatureFlags.ToMap() {
 		props["FeatureFlag"+key] = value
 	}

@@ -1587,6 +1587,25 @@ func TestAuthorizeOAuthUser_InvalidToken(t *testing.T) {
 	})
 }
 
+func TestResolveOAuthServiceAlias(t *testing.T) {
+	mainHelper.Parallel(t)
+	th := Setup(t)
+
+	th.App.UpdateConfig(func(cfg *model.Config) {
+		*cfg.OpenIdSettings.Enable = false
+		*cfg.KeycloakOIDCSettings.Enable = true
+	})
+
+	assert.Equal(t, model.ServiceKeycloakOIDC, th.App.resolveOAuthServiceAlias(model.ServiceOpenid))
+	assert.Equal(t, model.ServiceGitlab, th.App.resolveOAuthServiceAlias(model.ServiceGitlab))
+
+	th.App.UpdateConfig(func(cfg *model.Config) {
+		*cfg.OpenIdSettings.Enable = true
+	})
+
+	assert.Equal(t, model.ServiceOpenid, th.App.resolveOAuthServiceAlias(model.ServiceOpenid))
+}
+
 // TestLoginByIntune_InterfaceNotAvailable tests that LoginByIntune returns proper error when enterprise not compiled
 func TestLoginByIntune_InterfaceNotAvailable(t *testing.T) {
 	th := Setup(t).InitBasic(t)

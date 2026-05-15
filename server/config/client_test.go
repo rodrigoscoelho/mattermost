@@ -673,6 +673,24 @@ func TestGetLimitedClientConfig(t *testing.T) {
 				"FeatureFlagTestFeature": "myvalue",
 			},
 		},
+		{
+			"Keycloak OIDC is exposed as OpenID alias",
+			&model.Config{
+				KeycloakOIDCSettings: model.SSOSettings{
+					Enable:      model.NewPointer(true),
+					ButtonText:  model.NewPointer("Fratar OIDC"),
+					ButtonColor: model.NewPointer("#145DBF"),
+				},
+			},
+			"",
+			nil,
+			map[string]string{
+				"EnableSignUpWithOpenId":       "true",
+				"OpenIdButtonText":             "Fratar OIDC",
+				"OpenIdButtonColor":            "#145DBF",
+				"EnableSignUpWithKeycloakOIDC": "false",
+			},
+		},
 	}
 
 	for _, testCase := range testCases {
