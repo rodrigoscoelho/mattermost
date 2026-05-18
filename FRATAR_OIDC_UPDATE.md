@@ -195,9 +195,13 @@ Ela deve seguir o fluxo OAuth:
 - ou erro explicito de configuracao, se houver algo faltando
 
 ```bash
-curl -I http://127.0.0.1:8065/oauth/keycloak_oidc/login
-curl -I https://chat.fratar.com.br/oauth/keycloak_oidc/login
+curl -sS -D - -o /dev/null http://127.0.0.1:8065/oauth/keycloak_oidc/login
+curl -sS -D - -o /dev/null https://chat.fratar.com.br/oauth/keycloak_oidc/login
 ```
+
+Nao use `curl -I` para esta validacao. `curl -I` usa o metodo `HEAD`, mas a rota OAuth
+esta registrada para `GET`; com `HEAD`, o Mattermost pode cair no fallback do webapp e
+responder `200 OK` com `text/html`, mesmo quando o fluxo OAuth com `GET` esta correto.
 
 ### 7.2. Validacao funcional web
 
@@ -251,7 +255,7 @@ No servidor, confira:
 ```bash
 readlink -f /proc/$(pgrep -x mattermost | head -1)/exe
 systemctl cat mattermost | grep ExecStart
-curl -I http://127.0.0.1:8065/oauth/keycloak_oidc/login
+curl -sS -D - -o /dev/null http://127.0.0.1:8065/oauth/keycloak_oidc/login
 ```
 
 O binario ativo precisa ser o mesmo que foi sincronizado para `/opt/mattermost.new/bin/mattermost`.
@@ -312,7 +316,8 @@ make build-cmd
 Depois, reinicie o servico no servidor e valide:
 
 ```bash
-curl -I http://127.0.0.1:8065/oauth/keycloak_oidc/login
+curl -sS -D - -o /dev/null http://127.0.0.1:8065/oauth/keycloak_oidc/login
 ```
 
-Se esse endpoint responder com `200 OK` e `root.html`, o binario ativo nao e o correto.
+Se esse endpoint responder com `200 OK` e `root.html` usando `GET`, o binario ativo ou a rota
+proxy nao estao corretos.
